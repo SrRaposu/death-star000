@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Caçador de Fake News — Olhos Brilhantes</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f4f4f9;
+      --card:#fff;
+      --accent:#2196f3;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(33,150,243,0.06), transparent 10%),
+                  radial-gradient(800px 400px at 90% 90%, rgba(244,67,54,0.03), transparent 10%),
+                  var(--bg);
+      color:#222;
+      padding:20px;
+    }
+
+    #game{
+      width:100%;
+      max-width:760px;
+      background:var(--card);
+      border-radius:16px;
+      box-shadow:0 12px 30px rgba(15,20,30,0.12);
+      padding:28px;
+      text-align:center;
+      overflow:hidden;
+    }
+
+    header{
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      font-size:22px;
+      margin:0;
+      letter-spacing:0.2px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    /* Eyes container */
+    #eyes{
+      width:150px;
+      height:60px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      transition:transform .25s ease;
+    }
+
+    /* Card content */
+    #screen p{font-size:18px; margin:18px 0;}
+    button{
+      padding:10px 18px;
+      margin:8px;
+      border-radius:10px;
+      border:0;
+      cursor:pointer;
+      font-size:15px;
+      transition:transform .14s ease, box-shadow .14s ease;
+    }
+    button:active{transform:translateY(2px)}
+    .true{background:#4caf50;color:#fff}
+    .false{background:#f44336;color:#fff}
+    #startBtn{background:var(--accent); color:#fff}
+    #restartBtn{background:var(--accent); color:#fff}
+
+    /* Result text */
+    #result{font-weight:700; font-size:18px; margin-top:10px}
+
+    /* SVG eye styling & animations */
+    .eye-svg{width:68px;height:68px; display:block}
+    .iris{
+      transform-origin:50% 50%;
+      transition:transform .15s linear;
+    }
+
+    .pupil{
+      transform-origin:50% 50%;
+      transition:transform .06s linear;
+    }
+
+    /* continuous subtle pulse on iris */
+    @keyframes irisPulse {
+      0% { transform: scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0)); }
+      50% { transform: scale(1.02); filter:brightness(1.03) drop-shadow(0 0 6px rgba(255,255,200,0.12)); }
+      100% { transform: scale(1); filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0)); }
+    }
+    .iris { animation: irisPulse 3.2s ease-in-out infinite; }
+
+    /* sparkle animation when correct */
+    @keyframes sparkle {
+      0% { opacity:0; transform: scale(0.2) translateY(6px) rotate(15deg); filter:blur(2px) }
+      40% { opacity:1; transform: scale(1.05) translateY(0) rotate(0deg); filter:blur(0) }
+      100% { opacity:0; transform: scale(1.5) translateY(-6px) rotate(-8deg); filter:blur(2px) }
+    }
+
+    .sparkle .spark {
+      animation: sparkle .9s cubic-bezier(.16,.9,.34,1);
+    }
+
+    /* outer glow when spark happens */
+    .sparkle .iris { filter: drop-shadow(0 0 18px rgba(255,255,200,0.25)) saturate(1.15); }
+    .sparkle { transform:translateY(-4px) scale(1.02); }
+
+    /* small lashes / styling */
+    .eye-frame{ opacity:0.95; }
+
+    /* accessibility small screens */
+    @media (max-width:520px){
+      #eyes{width:120px;height:52px}
+      .eye-svg{width:56px;height:56px}
+    }
+  </style>
+</head>
+<body>
+  <div id="game" role="application" aria-label="Jogo Caçador de Fake News">
+    <header>
+      <h1>
+        <span id="eyes" aria-hidden="true">
+          <!-- Left eye -->
+          <svg class="eye-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="g1" cx="40%" cy="35%">
+                <stop offset="0%" stop-color="#fff"/>
+                <stop offset="30%" stop-color="#bfe5ff"/>
+                <stop offset="100%" stop-color="#0b74c6"/>
+              </radialGradient>
+            </defs>
+            <!-- sclera -->
+            <ellipse class="eye-frame" cx="50" cy="50" rx="46" ry="30" fill="#fffefc" stroke="#ddd" stroke-width="1"/>
+            <!-- iris -->
+            <circle class="iris" id="iris-left" cx="50" cy="50" r="18" fill="url(#g1)"/>
+            <!-- pupil -->
+            <circle class="pupil" id="pupil-left" cx="50" cy="50" r="8" fill="#08121a"/>
+            <!-- main highlight -->
+            <circle cx="44" cy="42" r="4.2" fill="rgba(255,255,255,0.95)"/>
+            <!-- small spark (animated) -->
+            <g class="spark" fill="rgba(255,255,230,0.9)" opacity="0">
+              <path d="M70 24 L74 35 L86 36 L76 44 L80 56 L70 48 L60 56 L64 44 L54 36 L66 35 Z" transform="translate(-34,-10) scale(.18)"/>
+            </g>
+          </svg>
+
+          <!-- Right eye -->
+          <svg class="eye-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="g2" cx="60%" cy="35%">
+                <stop offset="0%" stop-color="#fff"/>
+                <stop offset="30%" stop-color="#d6f8e0"/>
+                <stop offset="100%" stop-color="#0aa65b"/>
+              </radialGradient>
+            </defs>
+            <ellipse class="eye-frame" cx="50" cy="50" rx="46" ry="30" fill="#fffefc" stroke="#ddd" stroke-width="1"/>
+            <circle class="iris" id="iris-right" cx="50" cy="50" r="18" fill="url(#g2)"/>
+            <circle class="pupil" id="pupil-right" cx="50" cy="50" r="8" fill="#08121a"/>
+            <circle cx="56" cy="40" r="3.8" fill="rgba(255,255,255,0.95)"/>
+            <g class="spark" fill="rgba(255,255,230,0.9)" opacity="0">
+              <path d="M70 24 L74 35 L86 36 L76 44 L80 56 L70 48 L60 56 L64 44 L54 36 L66 35 Z" transform="translate(-6,-10) scale(.18)"/>
+            </g>
+          </svg>
+        </span>
+
+        Caçador de Fake News
+      </h1>
+    </header>
+
+    <div id="screen" role="region" aria-live="polite">
+      <p>Bem-vindo! Clique no botão abaixo para começar.</p>
+      <button id="startBtn">Começar</button>
+    </div>
+  </div>
+
+  <script>
+    /* Perguntas - personalize à vontade */
+    const questions = [
+      { text: "Beber água com limão cura COVID-19.", answer: false },
+      { text: "Vacinas passam por testes rigorosos antes de serem aprovadas.", answer: true },
+      { text: "Compartilhar notícias sem checar a fonte pode espalhar desinformação.", answer: true },
+      { text: "Chocolate derretido no micro-ondas recarrega bateria de celular.", answer: false }
+    ];
+
+    let current = 0, score = 0;
+    const screen = document.getElementById('screen');
+    const eyes = document.getElementById('eyes');
+    const irisL = document.getElementById('iris-left');
+    const irisR = document.getElementById('iris-right');
+    const pupilL = document.getElementById('pupil-left');
+    const pupilR = document.getElementById('pupil-right');
+
+    function showQuestion(){
+      if(current < questions.length){
+        screen.innerHTML = `
+          <p>${questions[current].text}</p>
+          <div>
+            <button class="true" aria-label="Resposta Verdadeiro">Verdadeiro</button>
+            <button class="false" aria-label="Resposta Fake News">Fake News</button>
+          </div>
+        `;
+        document.querySelector('.true').onclick = () => checkAnswer(true);
+        document.querySelector('.false').onclick = () => checkAnswer(false);
+      } else {
+        endGame();
+      }
+    }
+
+    function checkAnswer(answer){
+      const correct = (answer === questions[current].answer);
+      if(correct){
+        score++;
+        triggerSparkle(); // olhos brilham quando acerta
+      } else {
+        // pequeno "tremor" visual quando erra
+        eyes.style.transform = 'translateY(2px) rotate(-1deg)';
+        setTimeout(()=> eyes.style.transform = '', 160);
+      }
+      current++;
+      setTimeout(showQuestion, 220);
+    }
+
+    function endGame(){
+      let msg = "";
+      if(score === questions.length) msg = "Parabéns! Mestre em identificar fake news! 🎉";
+      else if(score >= questions.length/2) msg = "Mandou bem, mas dá pra melhorar! 😉";
+      else msg = "Cuidado — caiu em muitas fake news... 😬";
+
+      screen.innerHTML = `
+        <p>Fim de jogo!</p>
+        <p id="result">Você acertou ${score} de ${questions.length}.</p>
+        <p>${msg}</p>
+        <button id="restartBtn">Jogar de Novo</button>
+      `;
+      document.getElementById('restartBtn').onclick = () => {
+        current = 0; score = 0; showQuestion();
+      };
+    }
+
+    document.getElementById('startBtn').onclick = showQuestion;
+
+    /* EFEITO: acionar brilho nos olhos */
+    function triggerSparkle(){
+      // adiciona a classe que anima sparks e glow
+      eyes.classList.add('sparkle');
+      // mostrar as <g class="spark"> com opacidade temporária para cada svg
+      const sparks = eyes.querySelectorAll('.spark');
+      sparks.forEach(s => {
+        s.style.opacity = 1;
+        s.style.transform = 'translateY(0)';
+      });
+
+      // remove depois
+      setTimeout(()=> {
+        eyes.classList.remove('sparkle');
+        sparks.forEach(s => {
+          s.style.opacity = 0;
+        });
+      }, 900);
+    }
+
+    /* PUPIL FOLLOW: legais efeitos de olhar conforme mouse */
+    function movePupils(evt){
+      const rect = eyes.getBoundingClientRect();
+      const centerX = rect.left + rect.width/2;
+      const centerY = rect.top + rect.height/2;
+      const dx = (evt.clientX - centerX) / rect.width; // -0.5 .. 0.5 aprox
+      const dy = (evt.clientY - centerY) / rect.height;
+      // limitar deslocamento
+      const max = 6; // pixels de movimento da pupila
+      const px = Math.max(Math.min(dx * max * 2, max), -max);
+      const py = Math.max(Math.min(dy * max * 2, max), -max);
+
+      // aplicar transform nas pupilas/íris (pequena tradução e escala)
+      pupilL.setAttribute('cx', 50 + px*0.12);
+      pupilL.setAttribute('cy', 50 + py*0.12);
+      pupilR.setAttribute('cx', 50 + px*0.12);
+      pupilR.setAttribute('cy', 50 + py*0.12);
+
+      irisL.setAttribute('cx', 50 + px*0.03);
+      irisL.setAttribute('cy', 50 + py*0.03);
+      irisR.setAttribute('cx', 50 + px*0.03);
+      irisR.setAttribute('cy', 50 + py*0.03);
+    }
+
+    // habilita seguir mouse apenas em desktops (não atrapalhar em toque)
+    if(window.matchMedia && window.matchMedia('(pointer:fine)').matches){
+      window.addEventListener('mousemove', movePupils);
+      // também small random micro-movement pra vida
+      setInterval(()=> {
+        const e = { clientX: window.innerWidth * (0.4 + Math.random()*0.2), clientY: window.innerHeight * (0.3 + Math.random()*0.2) };
+        movePupils(e);
+      }, 2500);
+    }
+
+    // acessibilidade: se o usuário usa teclado, não mover demais
+    window.addEventListener('blur', ()=> {
+      // reset posições
+      pupilL.setAttribute('cx',50); pupilL.setAttribute('cy',50);
+      pupilR.setAttribute('cx',50); pupilR.setAttribute('cy',50);
+      irisL.setAttribute('cx',50); irisL.setAttribute('cy',50);
+      irisR.setAttribute('cx',50); irisR.setAttribute('cy',50);
+    });
+  </script>
+</body>
+</html>
